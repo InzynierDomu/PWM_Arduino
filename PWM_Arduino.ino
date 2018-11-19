@@ -1,29 +1,40 @@
+/**
+ * @file PWM_Arduino.ino
+ * @brief PWM Arduino controller - Main
+ * @author by Szymon Markiewicz
+ * @details http://www.inzynierdomu.pl/  
+ * @date 11-2018
+ */
+
 #include <LiquidCrystal.h>
 #include <LcdBarGraph.h>
 
-#define NUMBER_OF_PWM 5
+#define NUMBER_OF_PWM 5   ///< Number of PWM outputs for Arduino Nano without PB3, PD3
 
 //LCD
-const byte RS = 12;
-const byte EN = 16; 
-const byte D4 = 7; 
-const byte D5 = 14; 
-const byte D6 = 15; 
-const byte D7 = 4;
+const byte RS = 12;   ///< register select LCD pin
+const byte EN = 16;   ///< enebale LCD pin
+const byte D4 = 7;    ///< Data 4 LCD pin
+const byte D5 = 14;   ///< Data 5 LCD pin
+const byte D6 = 15;   ///< Data 6 LCD pin
+const byte D7 = 4;    ///< Data 7 LCD pin
 //Encoder
-const byte CLK = 3;
-const byte DT = 2; 
-const byte BUTTON = 17;
-//PWM outputs Arduino Nano
-const byte PWM[NUMBER_OF_PWM] = {5, 6, 9, 10, 11};
+const byte CLK = 3;   ///< CLK signal encoder pin
+const byte DT = 2;    ///< DT signal encoder pin
+const byte BUTTON = 17;   ///< Butlin encoder button pin
+//PWM outputs Arduino Nano    
+const byte PWM[NUMBER_OF_PWM] = {5, 6, 9, 10, 11};    ///< Arduino Nano PWM output pins 
 
-LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
-LcdBarGraph lbg(&lcd, 16);
+LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);  ///< LCD 
+LcdBarGraph lbg(&lcd, 16);                  ///< LCD for bar graph
 
-unsigned long time = 0; 
-int pwm[NUMBER_OF_PWM];
-int current_output = 0;
+unsigned long time = 0;   ///< Time for comparison CLK - DT encoder
+int pwm[NUMBER_OF_PWM];   ///< PWMs values of duty cycle
+int current_output = 0;   ///< Current controlled PWM
 
+/**
+ * @brief preparation to work, startup
+ */
 void setup() {
   pinMode(DT,INPUT); 
   pinMode(CLK,INPUT); 
@@ -40,10 +51,13 @@ void setup() {
   analog_refresh();
   
   lcd.begin(16, 2);
-  start_screen();
+  startup_screen();
   lcd_refresh();
 }
 
+/**
+ * @brief main loop
+ */
 void loop() {
   if (digitalRead(BUTTON)==0) 
   {
@@ -56,6 +70,9 @@ void loop() {
   analog_refresh();
 }
 
+/**
+ * @brief refresh LCD 
+ */
 void lcd_refresh(){
   lcd.setCursor(0, 0);
   lbg.drawValue(pwm[current_output],100);
@@ -68,6 +85,9 @@ void lcd_refresh(){
   lcd.print(output);
 }
 
+/**
+ * @brief refresh PWM outputs value of duty cycle
+ */
 void analog_refresh(){
   for(int i = 0; i < NUMBER_OF_PWM; i++)
   {
@@ -77,13 +97,19 @@ void analog_refresh(){
   }  
 }
 
+/**
+ * @brief decrementation interrupt from encoder   
+ */
 void decrementation()
 {
  if ((millis() - time) > 3 &&  pwm[current_output] > 0)
  pwm[current_output] --; 
  time = millis();
 }
- 
+
+/**
+ * @brief incrementation interrupt from encoder   
+ */
 void incrementation()
 {
  if ((millis() - time) > 3 &&  pwm[current_output] < 100) 
@@ -91,7 +117,10 @@ void incrementation()
  time = millis();
 }
 
-void start_screen()
+/**
+ * @brief startup screen 
+ */
+void startup_screen()
 {
   lcd.setCursor(0, 0);
   lcd.print(" PWM controller");
