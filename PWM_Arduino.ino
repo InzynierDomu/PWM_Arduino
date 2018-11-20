@@ -8,8 +8,10 @@
 
 #include <LiquidCrystal.h>
 #include <LcdBarGraph.h>
+#include <Servo.h>
 
 #define NUMBER_OF_PWM 5   ///< Number of PWM outputs for Arduino Nano without PB3, PD3
+//#define SERVO   ///< Flag for servo version compile
 
 //LCD
 const byte RS = 12;   ///< register select LCD pin
@@ -24,6 +26,9 @@ const byte DT = 2;    ///< DT signal encoder pin
 const byte BUTTON = 17;   ///< Butlin encoder button pin
 //PWM outputs Arduino Nano    
 const byte PWM[NUMBER_OF_PWM] = {5, 6, 9, 10, 11};    ///< Arduino Nano PWM output pins 
+#ifdef SERVO
+  Servo servoPWM[NUMBER_OF_PWM];  ///< Arduino Nano PWM output pins for servos
+#endif
 
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);  ///< LCD 
 LcdBarGraph lbg(&lcd, 16);                  ///< LCD for bar graph
@@ -47,6 +52,13 @@ void setup() {
   {
     pwm[i]=0;
   }
+
+  #ifdef SERVO
+    for(int i = 0; i < NUMBER_OF_PWM; i++)
+    {
+      servoPWM[i].attach(PWM[i]);
+    }
+  #endif 
 
   analog_refresh();
   
@@ -92,8 +104,13 @@ void analog_refresh(){
   for(int i = 0; i < NUMBER_OF_PWM; i++)
   {
     int retval = pwm[i];
-    retval = map(retval , 0, 100, 0, 255);
-    analogWrite(PWM[i], retval);
+    #ifdef SERVO
+      retval = map(retval, 0, 100, 0, 180);
+      servoPWM[i].write(retval);  
+    #else /*SERVO*/
+      retval = map(retval , 0, 100, 0, 255);
+      analogWrite(PWM[i], retval);
+    #endif 
   }  
 }
 
